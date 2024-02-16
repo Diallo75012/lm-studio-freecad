@@ -1,0 +1,28 @@
+name: freecad_drawer
+enabled: true
+required: false
+description: >-
+  This plugin is using FreeCAD Python scripting ability to generate a script to draw an object and download it as a .png file.
+  Get from the designer (user) query what object he want to be created through FreeCAD console Python scripting code.
+  Get from the designer (user) query where he want that script to save the image of the object created.
+  Then create a very detailed prompt and pass it as string parameter to the 'freecad_drawer' plugin.
+  When the plugin is done, verify if image is present at the designer (user) desired location path and provide the information about the file name and provide the python script as well that has been executed successfully.
+  If the image is not present, reformulate the designer (user) 'designer_need' function parameter and pass it again in the plugin to see if is going to work.
+examples: |-
+  # Python_script = freecad_drawer("Confirm that the image is at the indicated path, provide the name of the image and the path and also the python script that has been executed successfully to get that image downloaded properly.")
+  result = freecad_drawer("draw a pen using FreeCAD Python script")
+
+parameters:
+  - name: designer_need
+    type: str
+    required: true
+    description: >-
+      This is the query detailed with what the user want. What kind of Python script and what kind of object need to be drawn. Also the path where the image of the object should be downloaded as a .png file.
+
+
+# what you want it to return and the format
+returns:
+  - name: message
+    type: str
+    description: >-
+      This message is a string containing the last python script that has been executed and the message that describes if a .png file has been downloaded or not at the path desired by the user. Read the message and verify if the image is present at the path, if not put more details in the user query and retry the plugin again until you get the image downloaded as user requirements. If the image is present output the python script and the image file name.

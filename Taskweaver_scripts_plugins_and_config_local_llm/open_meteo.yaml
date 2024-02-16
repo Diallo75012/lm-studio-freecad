@@ -1,0 +1,34 @@
+# to say what it is name, description etc...
+name: open_meteo
+enabled: true
+required: false
+description: >-
+  Pull data from the weather API call returned response.
+  This plugin takes user requests when requesting weather forecast from a locality in Japan.
+  It must extract from that city or locality in Japan, the LATITUDE and LONGITUDE coordinates in order to be able to get the weather forcast.
+  Based on the World Geodetic System 1984, which is a standard for measuring positions on Earth.
+  From the returned data provide to the user an easy human readable format or explain it using easy words like if you were explaining the returned data to a 7 years old kid.
+  Work automously until you return the response to the user, do not disturb the user with questions as this plugin will return a dataframe with dates and temperatures.
+examples: |-
+  #hourly_dataframe = open_meteo("Get the weather forecast from the returned response and summarize it in am easy human readable way")
+  result = open_meteo(latitude, longitude)
+
+# your parameters defined in the .py file as functions will take some parameters
+parameters:
+  - name: longitude
+    type: str
+    required: true
+    description: >-
+      This is the extracted LONGITUDE from the user request that you have extracted form the location/city in Japan. So get the longitude of the city mentioned in the user query and find its longitude based on the World Geodetic System 1984, which is a standard for measuring positions on Earth.
+  - name: latitude
+    type: str
+    required: true
+    description: >-
+      This is the extracted LATITUDE from the user request that you have extracted form the location/city in Japan. So get the latitude of the city mentioned in the user query and find its longitude based on the World Geodetic System 1984, which is a standard for measuring positions on Earth.
+
+
+# what you want it to return and the format
+returns:
+  - name: hourly_dataframe
+    type: pandas.DataFrame
+    description: This is the dataframe containing the data from the weather API response that you will analyze and return to the user in an easily understandable way so that the user is well informed. The dataframe has a dates and temperatures for each date mentioned. Answer to user based on these dates and temperatures. Always provide to user in the answer the name of the city, the latitude and longitude, based on the World Goedetic System 1984, you used to locate it as a raminder so that user can see that you haven't done any mistake in locating the city.

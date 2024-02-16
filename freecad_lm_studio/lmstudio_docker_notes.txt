@@ -1,0 +1,63 @@
+##### LMSTUDIO DOCKER NOTES
+
+# Build the Docker image
+docker build -f lm_studio_Dockerfile --build-arg UID=$(id -u) --build-arg GID=$(id -g) -t lmstudio-image:1.0.0 .
+
+# Run the Docker container with volume OpenHermes Mistral 7B
+docker run -it --name lmstudio-container \
+  -p 1235:1235 -p 2222:22 \
+  -v /home/creditizens/.cache/lm-studio/models/TheBloke/OpenHermes-2.5-Mistral-7B-GGUF:/home/creditizens/.cache/lm-studio/models/TheBloke/OpenHermes-2.5-Mistral-7B-GGUF \
+  -v /home/creditizens/.cache/lm-studio/config-presets:/home/creditizens/.cache/lm-studio/config-presets \
+  -v /home/creditizens/.cache/lm-studio/chat:/home/creditizens/.cache/lm-studio/chat \
+  -v /home/creditizens/.cache/lm-studio/gpu-preferences.json:/home/creditizens/.cache/lm-studio/gpu-preferences.json \
+  lmstudio-image:1.0.0
+
+# run docker container with volume Codellama 7B
+docker run -it --name lmstudio-container \
+  -p 1235:1235 -p 2222:22 \
+  -v /home/creditizens/.cache/lm-studio/models/TheBloke/CodeLlama-7B-GGUF/codellama-7b.Q6_K.gguf:/home/creditizens/.cache/lm-studio/models/TheBloke/CodeLlama-7B-GGUF/codellama-7b.Q6_K.gguf \
+  -v /home/creditizens/.cache/lm-studio/config-presets:/home/creditizens/.cache/lm-studio/config-presets \
+  -v /home/creditizens/.cache/lm-studio/chat:/home/creditizens/.cache/lm-studio/chat \
+  -v /home/creditizens/.cache/lm-studio/gpu-preferences.json:/home/creditizens/.cache/lm-studio/gpu-preferences.json \
+  lmstudio-image:1.0.0 
+
+
+
+docker system prune: to delete all container, cahce, images, but not volumes and space will be made again
+
+
+sudo apt-get install libatk-bridge2.0-0
+
+Xvfb :$(cat /etc/resolv.conf | grep nameserver | awk '{print $2 ":0.0"}') & DISPLAY=:$(cat /etc/resolv.conf | grep nameserver | awk '{print $2 ":0.0"}') ./lm-studio --no-sandbox --disable-gpu
+
+
+make this one clean so no Xserver running at the same time: /tmp/.X11-unix/
+
+/home/creditizens/.cache/lm-studio/.session_cache/
+
+
+sudo apt install google-chrome-stable
+# check version with
+google-chrome-stable --version
+
+
+
+AS ROOT USER:
+sudo apt-get update && sudo apt-get install -y openssh-server xauth
+mkdir -r /var/run/sshd
+echo "X11Forwarding yes" >> /etc/ssh/sshd_config
+echo "X11UseLocalhost no" >> /etc/ssh/sshd_config
+sudo /usr/sbin/sshd -D &
+echo "creditizens:bonjour" | sudo chpasswd
+
+
+# Found the fix by having already installed X11 but missing the ssh server inside the container and set the password for the user in order to login by ssh, then the logged in by ssh user would be able to start lmstudio, all models are well mapped with the volumes. use the command:
+ssh -X creditizens@0.0.0.0 -p 2222
+cd /app/squashfs-root
+./lm-studio --no-sandbox --disable-gpu
+
+if issues doing ssh run this to get rid of previous ssh records that can cause problems: 
+ssh-keygen -f "/home/creditizens/.ssh/known_hosts" -R "[0.0.0.0]:2222"
+
+docker start -a -i `docker ps -q -l`
+

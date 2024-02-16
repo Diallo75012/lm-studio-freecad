@@ -1,0 +1,8 @@
+{
+
+"llm.api_base": "http://localhost:11434",
+"llm.api_key": "no_api_key_needed_free_of_use",
+"llm.api_type": "ollama",
+"llm.model": "codellama:7b"
+
+}

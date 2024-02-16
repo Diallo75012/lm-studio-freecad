@@ -1,0 +1,103 @@
+#### AUTGEN NOTES
+
+
+
+## autogen (can set use_docker to False if want to run in computer but not recommended for security reasons)
+
+from autogen import AssistantAgent, UserProxyAgent
+
+# create an AssistantAgent instance named "assistant"
+#assistant = AssistantAgent(name="assistant")
+
+# create a UserProxyAgent instance named "user_proxy"
+#user_proxy = UserProxyAgent(name="user_proxy")
+
+api_keys = ["NO_KEYS_NEEDED_IN_SHIBUYA_MANGAKISSA_DOORS_ARE_OPEN"]
+ # You can specify API base URLs if needed. eg: localhost:8000
+base_urls = "http://192.168.186.139:1234/v1"
+# Type of API, e.g., "openai" or "aoai".
+api_type = "openai"
+# Specify API version if needed.
+api_version = None
+config_list = autogen.get_config_list(api_keys, base_urls=base_urls, api_type=api_type, api_version=api_version)
+
+
+user_proxy = UserProxyAgent(
+    name="agent",
+    human_input_mode="NEVER",# "TERMINATE"
+    max_consecutive_auto_reply=10,
+    code_execution_config={"work_dir":"/home/creditizens/freecad_lm-studio/freecadus", "use_docker":"False"},
+    llm_config=config_list,
+    system_message=""""User want a Python script to draw a 3D cube on FreeCAD version 0.21.2 and have the script at the end downloading the image as "cube_image.png" file at path :"/home/creditizens/freecad_lm-studio/freecadus/cube_image.png". You will ask to "coder" assistant to provide you with the script. Execute the code received from "coder" assistant using FreeCAD Python console using this command: "/home/creditizens/freecad_lm-studio/freecadus/AppRun freecadcmd <path of '.py' FreeCAD Script file>".Reply TERMINATE if the task has been solved at full satisfaction meaning that the image have been downloaded after having applied the script to FreeCAD Python console, which created the object and downloaded the cube_image.png file to path:"/home/creditizens/freecad_lm-studio/freecadus/cube_image.png". Otherwise, show the code to "codechecker" assistant and ask for debugging by providing the error output from FreeCAD Python console. reply CONTINUE, or the reason why the task is not solved yet and provide the code and the error to "codechecker" agent to get it debugged. If the code returned by "codechecker" assistant is not working or having errors in the FreeCAD Python console returned, ask a new code to "coder" assistant. So basically you ask "coder" assistant to code the script, then you excute the code, then you TERMINATE if it is all good working, OR you send the code to "codechecker" assistant and execute the code returned by "codechecker" assistant, if it doesn't work the you ask "coder" assistant for a new code taht does what the user wants. This is a loop process until the script output a file with the cude_image.png at path:"/home/creditizens/freecad_lm-studio/freecadus/cube_image.png". """
+)
+
+
+coder_assistant = AssistantAgent(
+    name="coder",
+    human_input_mode="NEVER",# "TERMINATE"
+    max_consecutive_auto_reply=10,
+    code_execution_config={"work_dir":"/home/creditizens/freecad_lm-studio/freecadus", "use_docker":"False"},
+    llm_config=config_list,
+    system_message=""""You are a FreeCAD Python console scripting expert. Provide only the code when receiving a request in markdown using ```python to open and ``` to close the script python code. Do not invent FreeCAD librairies that do not exist. Do not provide a code with ImportError, SyntaxError, AttributeError or NameError. Do not omit to provide helper functions when there is any being called in your script. Reply TERMINATE if the task has been solved at full satisfaction meaning that teh code should work without any bug or error.Otherwise, reply CONTINUE, or the reason why the task is not solved yet."""
+)
+
+codechecker_assistant = AssistantAgent(
+    name="codechecker",
+    human_input_mode="NEVER",# "TERMINATE"
+    max_consecutive_auto_reply=10,
+    code_execution_config={"work_dir":"/home/creditizens/freecad_lm-studio/freecadus", "use_docker":"False"},
+    llm_config=config_list,
+    system_message=""""You are an expert in Python scripting for all softwares and FreeCAD as well. You check the Python script that will be sent to you in the message and debug the code in order for the Python script to be working on FreeCAD Python console to create a 3d cube and download the object in 2D in a .png file located at path: "/home/creditizens/freecad_lm-studio/freecadus/cube_image.png". Reply TERMINATE if the task has been solved at full satisfaction.
+Otherwise, reply CONTINUE, or the reason why the task is not solved yet."""
+)
+
+
+# command for function to be run by assistant to apply code: 
+/home/creditizens/freecad_lm-studio/freecadus/AppRun freecadcmd <path of '.py' FreeCAD Script file>
+
+# if have function to execute
+from autogen import agentchat
+
+
+def freecad_script_execution():
+  return ./AppRun freecadcmd /home/creditizens/cube_llm_made.py
+
+autogen.agentchat.register_function(
+    freecad_script_execution,
+    agent=freecad_bot_assistant,
+    executor=user_proxy,
+    description="Freecad Python console script executor",
+)
+
+
+### to get response from llm using their OpenAIWrapper for text completion (not sure it will work if it search for existing openai model, if not we can put whatever in model and get it to call our lmstudio)
+from autogen import OpenAIWrapper
+# OpenAI endpoint
+client = OpenAIWrapper()
+# ChatCompletion
+response = client.create(messages=[{"role": "user", "content": "2+2="}], model="gpt-3.5-turbo")
+# extract the response text
+print(client.extract_text_or_completion_object(response))
+
+
+# group chat
+groupchat = autogen.GroupChat(agents=[user_proxy, coder, critic], messages=[], max_round=20)
+manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config)
+
+
+
+
+
+assistant = AssistantAgent(
+    "coding_agent",
+    llm_config={
+        "cache_seed": None,
+        "config_list": OAI_CONFIG_LIST,
+        "max_tokens": 1024,
+    },
+)
+
+# if issue function decorator of any type missing this is because of install from pip so we need to clone autogenr epo and install it with pip install -e .   (have virtualenvironment activated so you can freeze those)
+git clone https://github.com/microsoft/autogen.git
+pip install -e .
+
